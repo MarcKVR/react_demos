@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {useLocation} from "react-router-dom";
+import {json, useLocation} from "react-router-dom";
 
 function GoogleCallback() {
 
@@ -11,9 +11,6 @@ function GoogleCallback() {
     // On page load, we take "search" parameters 
     // and proxy them to /api/auth/callback on our Laravel API
     useEffect(() => {
-
-        console.log("UseEffect");
-
         fetch(`http://localhost:9000/api/auth/callback${location.search}`, {
             headers : {
                 'Content-Type': 'application/json',
@@ -24,9 +21,24 @@ function GoogleCallback() {
             return response.json();
         })
         .then((data) => {
+            const userResponse = data.user;
 
-
-            console.log(data);
+            fetch(`http://localhost:9000/api/auth/social`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    data: {
+                        email: userResponse.email,
+                        google_id: userResponse.google_id
+                    }
+                }),
+            })
+                .then(response => response.json())
+                .then(() => { console.log("Correcto")})
+                .catch((error) => JSON.stringify(error)
+            );
 
             setLoading(false);
             setData(data);
